@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>What I Learned Trying to Predict Kanpur's Air Quality</title>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 700px; margin: 60px auto; padding: 0 20px; line-height: 1.7; color: #222; }
+    a { color: #0366d6; }
+    h1 { margin-bottom: 4px; }
+    h2 { margin-top: 32px; }
+    code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f6f8fa; padding: 14px; border-radius: 6px; overflow-x: auto; }
+    .subtitle { color: #555; font-style: italic; margin-top: 0; }
+    hr { border: none; border-top: 1px solid #ddd; margin: 40px 0 20px; }
+  </style>
+</head>
+<body>
+  <p><a href="/">← Back to home</a></p>
 
+  <h1>What I Learned Trying to Predict Kanpur's Air Quality</h1>
+  <p class="subtitle">A student's attempt at next-day AQI forecasting — and why 67% accuracy taught me more than 90% would have.</p>
+
+  <p>Kanpur has some of the worst air in India. In winter, PM2.5 regularly crosses 200 µg/m³ — several times the WHO's safe limit. Every year, I read headlines about it. This year, I decided to try to predict it.</p>
+
+  <p>The question I started with was simple: <strong>can tomorrow's AQI category be predicted from today's pollution readings?</strong></p>
+
+  <p>This is what I found, what surprised me, and what I'd do differently.</p>
+
+  <h2>The data</h2>
+
+  <p>I used real CPCB station data — about 105,000 fifteen-minute observations from Kanpur stations, aggregated to 365 daily rows. No synthetic data. The raw export from CPCB's CCR portal is messy (metadata rows above the header, inconsistent column names), so I wrote a header-sniffing function that finds the real header row and a column-alias map that normalizes names like <code>PM2.5 (µg/m³)</code> and <code>pm25ugm3</code> to the same feature.</p>
+
+  <p>This part alone took longer than I expected. Real-world data is not clean. The tutorials never tell you that.</p>
+
+  <h2>The model</h2>
+
+  <p>I trained a Random Forest classifier to predict the next day's AQI category (<code>Good</code>, <code>Satisfactory</code>, <code>Moderate</code>, <code>Poor</code>, <code>Very Poor</code>, <code>Severe</code>). Inputs were today's pollutant readings (PM2.5, PM10, NO2, SO2, CO, O3), weather features (temperature, humidity, wind speed), today's AQI, and a cyclical encoding of the season.</p>
+
+  <p>A few decisions I made deliberately:</p>
+
+  <ul>
+    <li><strong>Chronological train/test split</strong>, not a random shuffle. Time-series data leaks information if you split it randomly — the model would see the future during training.</li>
+    <li><strong>Persistence baseline included.</strong> I report the accuracy of the naive "tomorrow will look like today" rule alongside my model's accuracy. Without this, my 67% number means nothing.</li>
+    <li><strong>Class-balanced training.</strong> Most Kanpur days are <code>Moderate</code> or <code>Satisfactory</code>, so an unweighted model just predicts the majority class.</li>
+  </ul>
+
+  <h2>The result</h2>
+
+  <p><strong>Model accuracy: 67.1%</strong><br>
+  <strong>Persistence baseline: 61.6%</strong></p>
+
+  <p>So the model beats the dumb baseline by 5.5 percentage points. That's real, but it's small. And this is where the interesting part starts.</p>
+
+  <h2>What surprised me</h2>
+
+  <p>Two things.</p>
+
+  <p><strong>First, most of the accuracy comes from the easy cases.</strong> The confusion matrix shows the model is very good at predicting <code>Satisfactory</code> and <code>Moderate</code> days — which are most days. It almost never predicts <code>Poor</code>, <code>Very Poor</code>, or <code>Severe</code> correctly, because those days are rare in the data. On the days that matter most — the days when Kanpur's air is genuinely dangerous — the model is weakest.</p>
+
+  <p><strong>Second, my AQI formula was wrong at first.</strong> I initially computed AQI as <code>PM2.5 × 1.5</code>, which is a common simplification. But real CPCB AQI is non-linear. At PM2.5 = 90, my formula gave AQI = 135 (Moderate). The real formula gives 200 (top of Moderate). At PM2.5 = 120, mine gave 180, real gives 300 (Poor). I was systematically underestimating the exact high-pollution days the model needed to learn. After fixing the formula with real CPCB breakpoints, the labels changed significantly.</p>
+
+  <h2>What I'd do differently</h2>
+
+  <p>Three things:</p>
+
+  <ol>
+    <li><strong>Add weather forecast features.</strong> Right now the model only sees today's weather. But tomorrow's temperature, wind speed, and wind direction matter enormously for AQI. If I had tomorrow's forecast as input, the model would probably improve substantially.</li>
+    <li><strong>Use a time-series model.</strong> Random Forest treats each day as independent. But AQI is highly autocorrelated — yesterday's AQI strongly predicts today's. An LSTM or a simple ARIMA model would likely beat my classifier on this task.</li>
+    <li><strong>Model the AQI value, not the category.</strong> Predicting a continuous AQI number and then converting to a category is closer to the actual physical process. Classification discards information.</li>
+  </ol>
+
+  <h2>Why this matters to me</h2>
+
+  <p>The 67% number isn't the point. The point is that I now understand <em>why</em> the model is limited. Next-day AQI prediction is hard because it depends on weather, emissions events, and long-range transport — things yesterday's numbers can't capture alone.</p>
+
+  <p>That's not a failure of my model. That's a fact about the problem. And knowing that fact is more valuable than a model that gets 90% accuracy on synthetic data.</p>
+
+  <p>The code is here: <a href="https://github.com/Happ3ns/Weather-predictor">github.com/Happ3ns/Weather-predictor</a></p>
+
+  <hr>
+
+  <p><em>Written during a gap year while preparing for university applications. Feedback welcome.</em></p>
+
+</body>
+</html>
