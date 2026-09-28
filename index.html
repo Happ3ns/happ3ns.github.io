@@ -3,115 +3,246 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Akshat Kharkwal</title>
+  <title>What I Learned Trying to Predict Kanpur's Air Quality</title>
+  <meta name="description" content="A student's attempt at next-day AQI forecasting — and why 67% accuracy taught me more than 90% would have.">
   <style>
     :root {
-      --bg: #fafaf9;
-      --fg: #1a1a1a;
-      --muted: #666;
+      --bg: #fefefe;
+      --fg: #18181b;
+      --muted: #71717a;
+      --subtle: #a1a1aa;
       --accent: #2f6f4e;
-      --line: #e5e5e5;
+      --line: #e4e4e7;
+      --callout: #f8f7f5;
+      --code-bg: #f4f4f5;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #111;
-        --fg: #eee;
-        --muted: #999;
+        --bg: #0a0a0a;
+        --fg: #fafafa;
+        --muted: #a1a1aa;
+        --subtle: #71717a;
         --accent: #6abf8a;
-        --line: #2a2a2a;
+        --line: #27272a;
+        --callout: #141414;
+        --code-bg: #1c1c1f;
       }
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: Charter, "Iowan Old Style", "Source Serif Pro", Georgia, "Times New Roman", serif;
       background: var(--bg);
       color: var(--fg);
-      max-width: 640px;
+      max-width: 680px;
       margin: 0 auto;
-      padding: 64px 24px;
+      padding: 64px 24px 96px;
       line-height: 1.7;
-      font-size: 17px;
+      font-size: 19px;
     }
-    h1 {
-      font-size: 32px;
-      font-weight: 600;
-      margin: 0 0 8px;
-      letter-spacing: -0.02em;
-    }
-    .intro {
-      color: var(--muted);
-      margin: 0 0 48px;
-      font-size: 17px;
-    }
-    h2 {
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      margin: 40px 0 16px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    li {
-      padding: 14px 0;
-      border-bottom: 1px solid var(--line);
-    }
-    li:last-child { border-bottom: none; }
-    a {
-      color: var(--fg);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    a:hover { color: var(--accent); }
-    .desc {
-      display: block;
-      font-weight: 400;
-      color: var(--muted);
-      font-size: 15px;
-      margin-top: 2px;
-    }
-    .footer {
-      margin-top: 64px;
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
+
+    nav {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 14px;
-      color: var(--muted);
+      margin-bottom: 48px;
     }
-    .footer a { color: var(--muted); text-decoration: underline; }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    nav a:hover { color: var(--fg); }
+
+    header { margin-bottom: 56px; }
+    h1 {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 20px;
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      font-family: inherit;
+    }
+    .byline {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      color: var(--subtle);
+    }
+    .byline a { color: var(--subtle); text-decoration: underline; }
+
+    p { margin-bottom: 24px; }
+
+    h2 {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 24px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      margin: 56px 0 20px;
+      line-height: 1.3;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+    a:hover { border-color: var(--accent); }
+
+    strong { font-weight: 650; }
+    em { font-style: italic; }
+
+    ul, ol {
+      margin-bottom: 24px;
+      padding-left: 24px;
+    }
+    li { margin-bottom: 12px; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.85em;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .stat {
+      background: var(--callout);
+      border-left: 3px solid var(--accent);
+      padding: 20px 24px;
+      margin: 32px 0;
+      border-radius: 0 6px 6px 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      font-size: 16px;
+    }
+    .stat-row:first-child { border-bottom: 1px solid var(--line); margin-bottom: 6px; padding-bottom: 12px; }
+    .stat-label { color: var(--muted); font-size: 14px; }
+    .stat-value {
+      font-weight: 650;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-value.primary { color: var(--accent); }
+
+    blockquote {
+      border-left: 3px solid var(--line);
+      padding-left: 24px;
+      margin: 32px 0;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 64px 0 32px;
+    }
+
+    .footnote {
+      font-size: 16px;
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 600px) {
+      body { font-size: 18px; padding: 48px 20px 64px; }
+      h1 { font-size: 32px; }
+      .subtitle { font-size: 18px; }
+      h2 { font-size: 21px; margin-top: 48px; }
+    }
   </style>
 </head>
 <body>
 
-  <h1>Akshat Kharkwal</h1>
-  <p class="intro">Student in Kanpur. I build small tools — mostly machine learning, mostly to solve problems I have.</p>
+  <nav><a href="/">← Akshat Kharkwal</a></nav>
 
-  <h2>Writing</h2>
+  <header>
+    <h1>What I Learned Trying to Predict Kanpur's Air Quality</h1>
+    <p class="subtitle">A student's attempt at next-day AQI forecasting — and why 67% accuracy taught me more than 90% would have.</p>
+    <p class="byline">By Akshat Kharkwal · September 2026</p>
+  </header>
+
+  <p>Kanpur has some of the worst air in India. In winter, PM2.5 regularly crosses 200 µg/m³ — several times the WHO's safe limit. Every year, I read headlines about it. This year, I decided to try to predict it.</p>
+
+  <p>The question I started with was simple: <strong>can tomorrow's AQI category be predicted from today's pollution readings?</strong></p>
+
+  <p>This is what I found, what surprised me, and what I'd do differently.</p>
+
+  <h2>The data</h2>
+
+  <p>I used real CPCB station data — about 105,000 fifteen-minute observations from Kanpur stations, aggregated to 365 daily rows. No synthetic data. The raw export from CPCB's CCR portal is messy (metadata rows above the header, inconsistent column names), so I wrote a header-sniffing function that finds the real header row and a column-alias map that normalizes names like <code>PM2.5 (µg/m³)</code> and <code>pm25ugm3</code> to the same feature.</p>
+
+  <p>This part alone took longer than I expected. Real-world data is not clean. The tutorials never tell you that.</p>
+
+  <h2>The model</h2>
+
+  <p>I trained a Random Forest classifier to predict the next day's AQI category (<code>Good</code>, <code>Satisfactory</code>, <code>Moderate</code>, <code>Poor</code>, <code>Very Poor</code>, <code>Severe</code>). Inputs were today's pollutant readings (PM2.5, PM10, NO2, SO2, CO, O3), weather features (temperature, humidity, wind speed), today's AQI, and a cyclical encoding of the season.</p>
+
+  <p>A few decisions I made deliberately:</p>
+
   <ul>
-    <li>
-      <a href="blog/aqi-predictor.html">What I Learned Trying to Predict Kanpur's Air Quality</a>
-      <span class="desc">Next-day AQI forecasting with real CPCB data — and why 67% accuracy taught me more than 90% would have.</span>
-    </li>
+    <li><strong>Chronological train/test split</strong>, not a random shuffle. Time-series data leaks information if you split it randomly — the model would see the future during training.</li>
+    <li><strong>Persistence baseline included.</strong> I report the accuracy of the naive "tomorrow will look like today" rule alongside my model's accuracy. Without this, my 67% number means nothing.</li>
+    <li><strong>Class-balanced training.</strong> Most Kanpur days are <code>Moderate</code> or <code>Satisfactory</code>, so an unweighted model just predicts the majority class.</li>
   </ul>
 
-  <h2>Projects</h2>
-  <ul>
-    <li>
-      <a href="https://github.com/Happ3ns/Weather-predictor">Weather-Predictor</a>
-      <span class="desc">Random Forest classifier on 105k real CPCB observations. Chronological split, persistence baseline, 67.1% accuracy.</span>
-    </li>
-    <li>
-      <a href="https://github.com/Happ3ns/JEE-Quiz-Generator">JEE-Quiz-Studio</a>
-      <span class="desc">Zero-dependency quiz app with per-topic accuracy tracking. Built to make my own revision more targeted.</span>
-    </li>
-  </ul>
+  <h2>The result</h2>
 
-  <div class="footer">
-    <a href="https://github.com/Happ3ns">GitHub</a> · <a href="mailto:akshatkharkwal39@gmail.com">Email</a>
+  <div class="stat">
+    <div class="stat-row">
+      <span class="stat-label">Persistence baseline</span>
+      <span class="stat-value">61.6%</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Random Forest model</span>
+      <span class="stat-value primary">67.1%</span>
+    </div>
   </div>
+
+  <p>So the model beats the dumb baseline by 5.5 percentage points. That's real, but it's small. And this is where the interesting part starts.</p>
+
+  <h2>What surprised me</h2>
+
+  <p>Two things.</p>
+
+  <p><strong>First, most of the accuracy comes from the easy cases.</strong> The confusion matrix shows the model is very good at predicting <code>Satisfactory</code> and <code>Moderate</code> days — which are most days. It almost never predicts <code>Poor</code>, <code>Very Poor</code>, or <code>Severe</code> correctly, because those days are rare in the data. On the days that matter most — the days when Kanpur's air is genuinely dangerous — the model is weakest.</p>
+
+  <p><strong>Second, my AQI formula was wrong at first.</strong> I initially computed AQI as <code>PM2.5 × 1.5</code>, which is a common simplification. But real CPCB AQI is non-linear. At PM2.5 = 90, my formula gave AQI = 135 (Moderate). The real formula gives 200 (top of Moderate). At PM2.5 = 120, mine gave 180, real gives 300 (Poor). I was systematically underestimating the exact high-pollution days the model needed to learn. After fixing the formula with real CPCB breakpoints, the labels changed significantly.</p>
+
+  <h2>What I'd do differently</h2>
+
+  <ol>
+    <li><strong>Add weather forecast features.</strong> Right now the model only sees today's weather. But tomorrow's temperature, wind speed, and wind direction matter enormously for AQI. If I had tomorrow's forecast as input, the model would probably improve substantially.</li>
+    <li><strong>Use a time-series model.</strong> Random Forest treats each day as independent. But AQI is highly autocorrelated — yesterday's AQI strongly predicts today's. An LSTM or a simple ARIMA model would likely beat my classifier on this task.</li>
+    <li><strong>Model the AQI value, not the category.</strong> Predicting a continuous AQI number and then converting to a category is closer to the actual physical process. Classification discards information.</li>
+  </ol>
+
+  <h2>Why this matters to me</h2>
+
+  <p>The 67% number isn't the point. The point is that I now understand <em>why</em> the model is limited. Next-day AQI prediction is hard because it depends on weather, emissions events, and long-range transport — things yesterday's numbers can't capture alone.</p>
+
+  <p>That's not a failure of my model. That's a fact about the problem. And knowing that fact is more valuable than a model that gets 90% accuracy on synthetic data.</p>
+
+  <p>The code is here: <a href="https://github.com/Happ3ns/Weather-predictor">github.com/Happ3ns/Weather-predictor</a>.</p>
+
+  <hr>
+
+  <p class="footnote">Written during a gap year while preparing for university applications. Feedback welcome at <a href="mailto:akshatkharkwal39@gmail.com">akshatkharkwal39@gmail.com</a>.</p>
 
 </body>
 </html>
