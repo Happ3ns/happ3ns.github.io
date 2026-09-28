@@ -1,25 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Akshat Kharkwal</title>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Akshat Kharkwal</title>
   <style>
-    body { font-family: -apple-system, sans-serif; max-width: 700px; margin: 60px auto; padding: 0 20px; line-height: 1.6; color: #222; }
-    a { color: #0366d6; }
-    h1 { margin-bottom: 8px; }
+    :root {
+      --bg: #fafaf9;
+      --fg: #1a1a1a;
+      --muted: #666;
+      --accent: #2f6f4e;
+      --line: #e5e5e5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111;
+        --fg: #eee;
+        --muted: #999;
+        --accent: #6abf8a;
+        --line: #2a2a2a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 64px 24px;
+      line-height: 1.7;
+      font-size: 17px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .intro {
+      color: var(--muted);
+      margin: 0 0 48px;
+      font-size: 17px;
+    }
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 40px 0 16px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    li:last-child { border-bottom: none; }
+    a {
+      color: var(--fg);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover { color: var(--accent); }
+    .desc {
+      display: block;
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 2px;
+    }
+    .footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .footer a { color: var(--muted); text-decoration: underline; }
   </style>
 </head>
 <body>
+
   <h1>Akshat Kharkwal</h1>
-  <p>Student. Builder. Interested in machine learning and air quality.</p>
+  <p class="intro">Student in Kanpur. I build small tools — mostly machine learning, mostly to solve problems I have.</p>
+
   <h2>Writing</h2>
   <ul>
-    <li><a href="blog/aqi-predictor.html">What I Learned Trying to Predict Kanpur's Air Quality</a></li>
+    <li>
+      <a href="blog/aqi-predictor.html">What I Learned Trying to Predict Kanpur's Air Quality</a>
+      <span class="desc">Next-day AQI forecasting with real CPCB data — and why 67% accuracy taught me more than 90% would have.</span>
+    </li>
   </ul>
+
   <h2>Projects</h2>
   <ul>
-    <li><a href="https://github.com/Happ3ns/Weather-predictor">Weather-Predictor</a></li>
-    <li><a href="https://github.com/Happ3ns/JEE-Quiz-Generator">JEE-Quiz-Studio</a></li>
+    <li>
+      <a href="https://github.com/Happ3ns/Weather-predictor">Weather-Predictor</a>
+      <span class="desc">Random Forest classifier on 105k real CPCB observations. Chronological split, persistence baseline, 67.1% accuracy.</span>
+    </li>
+    <li>
+      <a href="https://github.com/Happ3ns/JEE-Quiz-Generator">JEE-Quiz-Studio</a>
+      <span class="desc">Zero-dependency quiz app with per-topic accuracy tracking. Built to make my own revision more targeted.</span>
+    </li>
   </ul>
+
+  <div class="footer">
+    <a href="https://github.com/Happ3ns">GitHub</a> · <a href="mailto:akshatkharkwal39@gmail.com">Email</a>
+  </div>
+
 </body>
 </html>
