@@ -276,6 +276,74 @@
 
       <p><strong>Second, my AQI formula was wrong at first.</strong> I initially computed AQI as <code>PM2.5 × 1.5</code>, which is a common simplification. But real CPCB AQI is non-linear. At PM2.5 = 90, my formula gave AQI = 135 (Moderate). The real formula gives 200 (top of Moderate). At PM2.5 = 120, mine gave 180, real gives 300 (Poor). I was systematically underestimating the exact high-pollution days the model needed to learn. After fixing the formula with real CPCB breakpoints, the labels changed significantly.</p>
 
+      <div class="stat" id="aqiCalcBox" style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+          <strong style="font-size:15px;">Try the CPCB Breakpoint Calculator</strong>
+          <span id="aqiDomLabel" style="font-size:12px; color:var(--muted);">Dominant: PM2.5</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-bottom:16px;">
+          <label style="font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">PM2.5 (µg/m³)
+            <input id="calcPm25" type="number" min="0" max="500" value="120" style="padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); font-size:14px;">
+          </label>
+          <label style="font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">PM10 (µg/m³)
+            <input id="calcPm10" type="number" min="0" max="600" value="180" style="padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); font-size:14px;">
+          </label>
+          <label style="font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">NO2 (µg/m³)
+            <input id="calcNo2" type="number" min="0" max="1000" value="42" style="padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); font-size:14px;">
+          </label>
+          <label style="font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">SO2 (µg/m³)
+            <input id="calcSo2" type="number" min="0" max="2500" value="18" style="padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); font-size:14px;">
+          </label>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Official CPCB AQI</span>
+          <span class="stat-value primary" id="aqiRealOut">300 · Poor</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Naive <code>PM2.5 × 1.5</code></span>
+          <span class="stat-value" id="aqiNaiveOut">180 · Moderate</span>
+        </div>
+      </div>
+      <script>
+        (function () {
+          function subIdx(val, bps) {
+            if (!isFinite(val) || val < 0) return 0;
+            for (const [bl, bh, il, ih] of bps) {
+              if (val >= bl && val <= bh) return Math.round(il + ((ih - il) / (bh - bl)) * (val - bl));
+            }
+            const last = bps[bps.length - 1];
+            return Math.min(500, Math.round(last[2] + ((last[3] - last[2]) / (last[1] - last[0])) * (val - last[0])));
+          }
+          function catName(aqi) {
+            if (aqi <= 50) return "Good";
+            if (aqi <= 100) return "Satisfactory";
+            if (aqi <= 200) return "Moderate";
+            if (aqi <= 300) return "Poor";
+            if (aqi <= 400) return "Very Poor";
+            return "Severe";
+          }
+          const PM25 = [[0,30,0,50],[30,60,51,100],[60,90,101,200],[90,120,201,300],[120,250,301,400],[250,500,401,500]];
+          const PM10 = [[0,50,0,50],[50,100,51,100],[100,250,101,200],[250,350,201,300],[350,430,301,400],[430,600,401,500]];
+          const NO2  = [[0,40,0,50],[40,80,51,100],[80,180,101,200],[180,280,201,300],[280,400,301,400],[400,1000,401,500]];
+          const SO2  = [[0,40,0,50],[40,80,51,100],[80,380,101,200],[380,800,201,300],[800,1600,301,400],[1600,2500,401,500]];
+          function update() {
+            const pm25 = parseFloat(document.getElementById("calcPm25").value) || 0;
+            const pm10 = parseFloat(document.getElementById("calcPm10").value) || 0;
+            const no2  = parseFloat(document.getElementById("calcNo2").value) || 0;
+            const so2  = parseFloat(document.getElementById("calcSo2").value) || 0;
+            const subs = [["PM2.5", subIdx(pm25, PM25)], ["PM10", subIdx(pm10, PM10)], ["NO2", subIdx(no2, NO2)], ["SO2", subIdx(so2, SO2)]];
+            subs.sort((a, b) => b[1] - a[1]);
+            const realAqi = subs[0][1];
+            const naiveAqi = Math.round(pm25 * 1.5);
+            document.getElementById("aqiDomLabel").textContent = "Dominant: " + subs[0][0];
+            document.getElementById("aqiRealOut").textContent = realAqi + " · " + catName(realAqi);
+            document.getElementById("aqiNaiveOut").textContent = naiveAqi + " · " + catName(naiveAqi);
+          }
+          ["calcPm25","calcPm10","calcNo2","calcSo2"].forEach(id => document.getElementById(id)?.addEventListener("input", update));
+          update();
+        })();
+      </script>
+
       <h2>What I'd do differently</h2>
 
       <ol>
